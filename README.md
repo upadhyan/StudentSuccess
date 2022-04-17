@@ -11,26 +11,9 @@ The main goal of this analysis is to identify students that are in need of extra
 The team goal for this project is to assign the students to different classes in order to identify which students are in need of support. The three classes will be "critical,"  "required," and "not required" The classes will consider as many factors as possible in order to create the best match. Furthermore, the team wants to look at how important each of the factors is such that teachers and school administrators can better design support systems for students in need. We are looking to achieve a classification error below or equal to 30%. Since the majority of features are categorical or binary variables and student grades tend to have very large variance, we believe that being able to predict 70% of the variability should be sufficient for this task.
 
 ## Methods 
-* First, we will create a score variable that will combine the grade the score they got in the last semester of the $$ \delta$$
+* First, we will create a score variable that will combine the grade the score they got in the last semester of the year with the change between the first and last semester 
+* We will then assign classes based on cutoffs for the score. 
+* Afterwards we try out a logistic regression model with either l1 or l2 shrinkage in order to assess how clear the decision boundary is
+* After evaluating the performance of logistic regression, the team will move to a decision tree model with boosting. 
+* The team will use K-Fold CV to determine the hyperparameters 
 
-
-Description of Methods:
-First, create our score variable  S =(1+20)F  
-: average change in grades between the three periods
-F: the final grade of the student
-Using the score, assign classes 
-S7  critical
-7<S14  required
-14<S  not required
-The value used to divide the classes were created based on the percentage value out of 20. For example, the first cutoff is at 14. The score of 14/20 equates to 70%, or a passing grade. If a student has an S-score of 14 or higher, then we can assume that they are comfortable enough to ont need any intervention. The cutoff point of 7 was chosen so that the cut off points were evenly spaced. If a student has am S-score of 7 or lower, then we can assume that it will be critical for them to receive extra support.
-Split data into K-Folds 
-Start out with logistic regression model
-Use lasso to select best combination of variables (using K-Fold CV to determine )
-Output class probability, class assignments, and feature significance.
-Depending on performance, we may discard this method OR use the outputted probabilities for the next model as a feature 
-Use XGBoost or LightGBM with all of the variables
-Use CV to tune hyperparameters (if time permits)
-Check feature importance
-Trim features
-Group existing features using dimensionality reduction 
-At each step, evaluate runtime and CV error
