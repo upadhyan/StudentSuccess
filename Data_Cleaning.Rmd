@@ -102,7 +102,7 @@ assign_class = function(student_score, bounds){
 classes_math = assign_class(student_score_math, bounds_math)
 classes_por = assign_class(student_score_por, bounds_por)
 
-data_math = cbind(data_math, Student_Class = as.facgtor(classes_math))
+data_math = cbind(data_math, Student_Class = as.factor(classes_math))
 data_por = cbind(data_por, Student_Class = as.factor(classes_por))
 
 ```
