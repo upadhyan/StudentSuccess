@@ -13,3 +13,6 @@ S2 <- c()
 for (l in 1:nrow(d2)){
   S2[l] <- (1+ (((d2$G2[l] - d2$G1[l]) + (d2$G3[l] - d2$G2[l])/2)/20)) * d2$G3[l]
 }
+
+d1.new <- cbind(d1, S1)
+d2.new <- cbind(d2, S2)
