@@ -58,8 +58,8 @@ create_classes = function(student_score){
   size = ceiling(length(student_score) / 3)
   
   temp = sort(student_score)
-  bound1 = temp[132]
-  bound2 = temp[264]
+  bound1 = temp[round(length(student_score)*(1/3))]
+  bound2 = temp[round(length(student_score)*(1/3))]
   return(c(bound1, bound2))
 }
 
