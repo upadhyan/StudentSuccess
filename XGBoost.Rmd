@@ -3,16 +3,157 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+# XGBoost
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+## Imports and packages
 
 ```{r}
-plot(cars)
+require(xgboost)
+require(Matrix)
+require(data.table)
+require(caret)
+require(mltools)
+require(data.table)
+require(progress)
+```
+## Data Prep
+### Loading in the data
+```{r}
+df <- read.csv("data/por_data_cleaned.csv", header = TRUE)
+drops <- c("X","G1","G2","G3", "Student_Score")
+df <- df[ , !(names(df) %in% drops)]
+
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+### One-Hot Encoding for categorical variables
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+Y <- df$Student_Class - 1
+
+X <- df[,names(df) != "Student_Class"]
+dtypes <- sapply(X, class)
+categorical_names <- names(dtypes[dtypes != "integer"])
+numerical_names <- names(dtypes[dtypes == "integer"])
+
+categorical <- X[categorical_names]
+numerical <- X[numerical_names]
+categorical <- as.data.table(lapply(categorical, as.factor))
+categorical <- one_hot(categorical)
+X = cbind(categorical, numerical)
+
+```
+
+### Splitting into testing and training sets
+```{r}
+partition = createDataPartition(
+  Y,
+  times = 1,
+  p = 0.7,
+  list = TRUE,
+  groups = min(5, length(Y))
+)
+X_train = X[partition$Resample1,]
+X_test = X[-partition$Resample1,]
+
+Y_train = Y[partition$Resample1]
+Y_test = Y[-partition$Resample1]
+
+```
+
+
+## XGBoost
+
+### 5-Fold CV 
+
+Running cross validation on every combination of parameters
+```{r}
+max_depth_vals <- seq(3,10,1)
+min_child_weight_vals <- seq(1,6,1)
+gamma_vals <- seq(0,.5,.1)
+results <- data.frame(max_depth = c(),
+                      min_child_weight = c(),
+                      gamma = c(),
+                      merror = c())
+total <- length(max_depth_vals) * length(min_child_weight_vals) * length(gamma_vals)
+pb <- progress_bar$new(
+  format = "  Running [:bar] :percent . Finished in :elapsed",
+  total = total, clear = FALSE, width= 100)
+pb$tick(0)
+for (max_depth in max_depth_vals){
+  for (min_child_weight in min_child_weight_vals){
+    for(gamma in gamma_vals){
+      cv <- xgb.cv(data = as.matrix(X),
+             label = Y,
+             objective = "multi:softmax",
+             verbose = 0,
+             num_class = 3,
+             nfold = 5, 
+             metrics = list("merror"),
+             nrounds = 70,
+             eta = 0.01,
+             max_depth = max_depth,
+             min_child_weight = min_child_weight,
+             gamma = gamma,
+             early_stopping_rounds = 25)
+      res <- list(max_depth = max_depth,
+                  min_child_weight = min_child_weight,
+                  gamma = gamma,
+                  merror = min(cv$evaluation_log$train_merror_mean))
+      results <- rbind(results, res)
+      pb$tick()
+    }
+  }
+}
+```
+
+Visualizing the test results
+
+```{r}
+plot(results$max_depth, results$merror)
+```
+```{r}
+plot(results$min_child_weight, results$merror)
+```
+
+```{r}
+plot(results$gamma, results$merror)
+
+```
+Our parameters should be a depth of 10, a minimum child weight of 1, and a gamma of .1
+
+
+### Training
+```{r}
+bstDense <- xgboost(data = as.matrix(X_train), 
+                    label= Y_train,
+                    objective = "multi:softmax",
+                    num_class = 3,
+                    verbose = 0,
+                    nrounds = 70,
+                    eta = 0.01,
+                    max_depth = 10,
+                    min_child_weight = 1,
+                    gamma = 0.1
+                    )
+```
+
+### Prediction
+
+```{r}
+Y_hat <- predict(bstDense, as.matrix(X_test))
+c_matrix <- confusionMatrix(data=as.factor(Y_hat), reference = as.factor(Y_test))
+c_matrix
+
+```
+
+### Feature Importance
+
+```{r}
+importance <- xgb.importance(model = bstDense)
+xgb.plot.importance(importance[1:10,])
+
+```
+
+
+
