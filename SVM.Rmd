@@ -1,18 +1,40 @@
 ---
-title: "R Notebook"
+title: "SVM"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+library(e1071)
+data_math_total_rows <- nrow(data_math) 
+data_math.numtrain <- round(data_math_total_rows*.7) # takes 
+set.seed(1)
 
-```{r}
-plot(cars)
-```
+data_math.new <- data_math[, -c(31:34)] # delete columns 31 - 34
+tindex_math <- sample(data_math_total_rows, data_math.numtrain)   # Create a random index
+train_data_math <- data_math.new[tindex_math,]   # Create training set
+test_data_math <- data_math.new[-tindex_math,]   # Create test set
+svm_math <- svm(Student_Class~., data=train_data_math,  kernal="radial", 
+            gamma=0.1, cost=10)
+summary(svm_math)
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+prediction_math <- predict(svm_math, test_data_math)
+xtab_math <- table(test_data_math$Student_Class, prediction_math)
+xtab_math
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+##########
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+data_por_total_rows <- nrow(data_por)
+data_por.numtrain <- round(data_por_total_rows*.7)
+set.seed(2)
+
+data_por.new <- data_por[, -c(31:34)] # delete columns 31 - 34
+tindex_por <- sample(data_por_total_rows, data_por.numtrain)   # Create a random index
+train_data_por <- data_por.new[tindex_por,]   # Create training set
+test_data_por <- data_por.new[-tindex_por,]   # Create test set
+svm_por <- svm(Student_Class~., data=train_data_por,  kernal="radial", 
+                gamma=0.1, cost=10)
+summary(svm_por)
+
+prediction_por <- predict(svm_por, test_data_por)
+xtab_por <- table(test_data_por$Student_Class, prediction_por)
+xtab_por
