@@ -106,3 +106,55 @@ data_math = cbind(data_math, Student_Class = as.factor(classes_math))
 data_por = cbind(data_por, Student_Class = as.factor(classes_por))
 
 ```
+Data Analysis
+```{r}
+#install.packages("ggplot2")
+#install.packages("ggpubr")
+#install.packages("gridExtra")
+library(ggplot2)
+library(ggpubr)
+library(gridExtra)
+
+##Plot bar charts for each of the factor variables
+#Function that plots individual barplot
+plt1 = function(index, dat){
+  
+  #Creates title
+  tit = paste0("Bargraph of ", names(dat[index]))
+  
+  #Creates plot using ggplot
+  x = ggplot(dat, aes(x = factor(dat[,index]))) + geom_bar(fill = 'coral') + ggtitle(tit) + xlab(names(dat[index]))
+  return(x)
+}
+
+#Function that combines plots outouted from plt1 function
+plt2 = function(i, dat){
+  if(i != 26){
+    thing = list(plt1(i, dat), plt1(i+1, dat), plt1(i+2, dat), plt1(i+3, dat), plt1(i+4, dat))
+    do.call("ggarrange", thing)
+  }
+  else{
+    thing = list(plt1(i, dat), plt1(i+1, dat), plt1(i+2, dat), plt1(i+3, dat))
+    do.call("ggarrange", thing)
+  }
+}
+
+#uses plt2 function to plot barplots for all factor variables for math and por datasets
+plt2(1, data_math); plt2(6, data_math); plt2(11, data_math); plt2(16, data_math); plt2(21, data_math); plt2(26, data_math)
+
+plt2(1, data_por); plt2(6, data_por); plt2(11, data_por); plt2(16, data_por); plt2(21, data_por); plt2(26, data_por)
+
+##Plot Boxplots for each of the continuous variables
+par(mfrow = c(1,3))
+boxplot(data_math$G1, xlab = "Grades: Period 1", col = "coral")
+boxplot(data_math$G2, xlab = "Grades: Period 2", col = "coral")
+boxplot(data_math$G3, xlab = "Grades: Period 3", col = "coral")
+title("Boxplots of Period Grades for Math", outer = TRUE, line = -1)
+
+par(mfrow = c(1,3))
+boxplot(data_por$G1, xlab = "Grades: Period 1", col = "coral")
+boxplot(data_por$G2, xlab = "Grades: Period 2", col = "coral")
+boxplot(data_por$G3, xlab = "Grades: Period 3", col = "coral")
+title("Boxplots of Period Grades for Portugese", outer = TRUE, line = -1)
+
+```
