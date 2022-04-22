@@ -1,18 +1,147 @@
 ---
-title: "R Notebook"
+title: "LogisticRegression"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+## Import Packages
 
 ```{r}
-plot(cars)
+require(xgboost)
+require(Matrix)
+require(data.table)
+require(caret)
+require(mltools)
+require(data.table)
+require(progress)
+library(glmnet)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+## Data Prep
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+### Loading in the data
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+df <- read.csv("data/por_data_cleaned.csv", header = TRUE)
+drops <- c("X","G1","G2","G3", "Student_Score")
+df <- df[ , !(names(df) %in% drops)]
+
+```
+
+### One-Hot Encoding for categorical variables
+
+```{r}
+Y <- df$Student_Class - 1
+
+X <- df[,names(df) != "Student_Class"]
+dtypes <- sapply(X, class)
+categorical_names <- names(dtypes[dtypes != "integer"])
+numerical_names <- names(dtypes[dtypes == "integer"])
+
+categorical <- X[categorical_names]
+numerical <- X[numerical_names]
+categorical <- as.data.table(lapply(categorical, as.factor))
+categorical <- one_hot(categorical)
+X = cbind(categorical, numerical)
+
+```
+
+### Splitting into testing and training sets
+
+```{r}
+partition = createDataPartition(
+  Y,
+  times = 1,
+  p = 0.7,
+  list = TRUE,
+  groups = min(5, length(Y))
+)
+X_train = X[partition$Resample1,]
+X_test = X[-partition$Resample1,]
+
+Y_train = Y[partition$Resample1]
+Y_test = Y[-partition$Resample1]
+
+
+training_set <- cbind(Y_train,X_train)
+```
+
+## Generalised Linear Model
+
+```{r}
+lm_fit <- glm(as.factor(Y_train)~.,data=training_set,family= binomial())
+
+summary(lm_fit)
+
+```
+
+```{r}
+Y_hat <- predict(lm_fit,newdata=X_test,type="response")
+Y_hat[Y_hat>0.5] <- 2
+Y_hat[Y_hat!=2] <- 0
+c_matrix <- confusionMatrix(data=as.factor(Y_hat), reference = as.factor(Y_test))
+c_matrix
+```
+
+## Fit Using Lasso
+
+Finding an optimal lambda to use by using k-fold cross validation.
+
+### K-fold cross-validation
+
+```{r}
+cv_fit <- cv.glmnet(as.matrix(X_train), Y_train, alpha = 1)
+lasso_fit <- glmnet(as.matrix(X_train), Y_train, alpha = 1)
+plot(lasso_fit)
+plot(cv_fit)
+best_lambda <- cv_fit$lambda.min
+best_lambda
+```
+
+### Fit-using lasso
+
+```{r}
+lasso_bestfit <- glmnet(X_train,factor(Y_train),lambda = best_lambda,alpha=1,family = "multinomial")
+
+lasso_coeff <- coef(lasso_bestfit)
+#coef_use <- names(lasso_coeff[lasso_coeff!=0])
+lasso_resp <- predict(lasso_bestfit,newx = as.matrix(X_test), 
+                       s=best_lambda,type = "response")
+lasso_class <- rep(0,length(lasso_resp[,1,1]))
+lasso_class[lasso_resp[,2,1]>0.5] <- 2
+
+c_matrix_lasso <- confusionMatrix(data=as.factor(lasso_class), reference = as.factor(Y_test))
+c_matrix_lasso
+```
+
+## Fit Using Regression
+
+Finding an optimal lambda to use by using k-fold cross validation.
+
+### K-fold cross-validation
+
+```{r}
+cv_fit2 <- cv.glmnet(as.matrix(X_train), Y_train, alpha = 0)
+ridge_fit <- glmnet(as.matrix(X_train), Y_train, alpha = 0)
+plot(ridge_fit)
+plot(cv_fit2)
+best_lambda2 <- cv_fit2$lambda.min
+best_lambda2
+```
+
+### Fit-using Ridge
+
+```{r}
+ridge_bestfit <- glmnet(X_train,factor(Y_train),lambda = best_lambda,alpha=0,family = "multinomial")
+
+ridge_coeff <- coef(ridge_bestfit)
+#coef_use <- names(lasso_coeff[lasso_coeff!=0])
+ridge_resp <- predict(ridge_bestfit,newx = as.matrix(X_test), 
+                       s=best_lambda2,type = "response")
+ridge_class <- rep(0,length(ridge_resp[,1,1]))
+ridge_class[ridge_resp[,2,1]>0.5] <- 2
+
+c_matrix_ridge <- confusionMatrix(data=as.factor(ridge_class), reference = as.factor(Y_test))
+c_matrix_ridge
+```
+
+### 
