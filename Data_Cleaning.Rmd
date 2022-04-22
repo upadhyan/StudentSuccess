@@ -50,8 +50,8 @@ Create/Assign Classes
 #outputs:
 #->bounds: vector containing two boundaries of the classes
 create_classes = function(student_score){
-  bound1 = mean(student_score) - sd(student_score)
-  bound2 = mean(student_score) + sd(student_score)
+  bound1 = mean(student_score) - (sd(student_score) / 2)
+  bound2 = mean(student_score) + (sd(student_score) / 2)
   return(c(bound1, bound2))
 }
 
