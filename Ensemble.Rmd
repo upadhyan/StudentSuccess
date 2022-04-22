@@ -1,18 +1,123 @@
 ---
-title: "R Notebook"
+title: "Ensemble Model"
 output: html_notebook
 ---
-
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
-
+# Imports
 ```{r}
-plot(cars)
+require(xgboost)
+require(Matrix)
+require(data.table)
+require(caret)
+require(mltools)
+require(data.table)
+require(progress)
+require(modeest)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+# Math Data
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+## Data Intake
+### Load Data
+```{r}
+df <- read.csv("data/math_data_cleaned.csv", header = TRUE)
+drops <- c("X","G1","G2","G3", "Student_Score")
+df <- df[ , !(names(df) %in% drops)]
+```
+### One Hot encoding
+```{r}
+Y <- df$Student_Class - 1
+
+X <- df[,names(df) != "Student_Class"]
+dtypes <- sapply(X, class)
+categorical_names <- names(dtypes[dtypes != "integer"])
+numerical_names <- names(dtypes[dtypes == "integer"])
+
+categorical <- X[categorical_names]
+numerical <- X[numerical_names]
+categorical <- as.data.table(lapply(categorical, as.factor))
+categorical <- one_hot(categorical)
+X = cbind(categorical, numerical)
+
+```
+
+### Train-Test Split
+
+```{r}
+partition = createDataPartition(
+  Y,
+  times = 1,
+  p = 0.7,
+  list = TRUE,
+  groups = min(5, length(Y))
+)
+X_train = X[partition$Resample1,]
+X_test = X[-partition$Resample1,]
+
+Y_train = Y[partition$Resample1]
+Y_test = Y[-partition$Resample1]
+
+```
+
+## Logistic Regression 
+
+## XGBoost
+### Train
+```{r}
+bstDense <- xgboost(data = as.matrix(X_train), 
+                    label= Y_train,
+                    objective = "multi:softmax",
+                    num_class = 3,
+                    verbose = 0,
+                    nrounds = 70,
+                    eta = 0.01,
+                    max_depth = 10,
+                    min_child_weight = 1,
+                    gamma = 0.1
+                    )
+```
+### Predict on Test
+```{r}
+Y_hat_XGBoost <- as.factor(predict(bstDense, as.matrix(X_test)))
+```
+
+## SVM 
+
+## Ensemble 
+
+## Evaluation
+
+# Portugese Data
+
+## Load Data
+
+## Logistic Regression Prediction
+
+## XGBoost Prediction
+
+## SVM Prediction
+
+## Ensemble 
+```{r}
+Y_hat_logistic <- as.factor(sample(0:2, length(Y_hat_XGBoost), replace = TRUE))
+Y_hat_SVM <- as.factor(sample(0:2, length(Y_hat_XGBoost), replace = TRUE))
+predictions <- data.frame(Y_hat_logistic, Y_hat_XGBoost, Y_hat_SVM)
+class_chooser <- function(x){
+  mode <- mlv(x, method = "mfv")
+  if (length(mode) > 1) {
+    mode <- sample(mode, 1)
+  }
+  mode <- factor(mode, levels = c("0","1","2"))
+  return(mode)
+}
+
+end_predictions = apply(predictions, 1,class_chooser)
+
+c_matrix <- confusionMatrix(data=end_predictions, reference = as.factor(Y_test))
+c_matrix
+
+```
+
+
+
+## Evaluation
