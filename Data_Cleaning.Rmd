@@ -4,8 +4,8 @@ output: html_notebook
 ---
 Import Data and make into data frame
 ```{r}
-data_math = read.table("student/student-mat.csv",sep=";",header=TRUE)
-data_por = read.table("student/student-por.csv",sep=";",header=TRUE)
+data_math = read.table("data/student-mat.csv",sep=";",header=TRUE)
+data_por = read.table("data/student-por.csv",sep=";",header=TRUE)
 
 data_all = merge(data_math,data_por,by=c("school","sex","age","address","famsize","Pstatus","Medu","Fedu","Mjob","Fjob","reason","nursery","internet"))
 ```

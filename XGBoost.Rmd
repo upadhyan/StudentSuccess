@@ -151,7 +151,7 @@ c_matrix
 
 ```{r}
 importance <- xgb.importance(model = bstDense)
-xgb.plot.importance(importance[1:10,])
+xgb.plot.importance(importance[1:5,])
 
 ```
 
