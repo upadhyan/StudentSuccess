@@ -4,49 +4,132 @@ output: html_notebook
 ---
 
 ```{r}
-library(e1071) 
+library(readr)
+require(xgboost)
+require(Matrix)
+require(data.table)
+require(caret)
+require(mltools)
+require(data.table)
+require(progress)
+library(e1071)
+
+
+df <- read_csv("https://raw.githubusercontent.com/upadhyan/StudentSuccess/main/data/math_data_cleaned.csv")
+
+drops <- c("X","G1","G2","G3", "Student_Score")
+df <- df[ , !(names(df) %in% drops)]
+
+por_data <- read_csv("https://raw.githubusercontent.com/upadhyan/StudentSuccess/main/data/por_data_cleaned.csv")
+
+Y <- df$Student_Class - 1
+X <- df[,names(df) != "Student_Class"]
+dtypes <- sapply(X, class)
+categorical_names <- names(dtypes[dtypes != "integer"])
+numerical_names <- names(dtypes[dtypes == "integer"])
+categorical <- X[categorical_names]
+numerical <- X[numerical_names]
+categorical <- as.data.table(lapply(categorical, as.factor))
+categorical <- one_hot(categorical)
+X = cbind(categorical, numerical)
+
+partition = createDataPartition(
+  Y,
+  times = 1,
+  p = 0.7,
+  list = TRUE,
+  groups = min(5, length(Y))
+)
+X_train = X[partition$Resample1,]
+X_test = X[-partition$Resample1,]
+Y_train = Y[partition$Resample1]
+Y_test = Y[-partition$Resample1]
+
+Y_train = factor(Y_train) 
+
+train_data <- cbind.data.frame(X_train, Y_train)
+
+Y_test = factor(Y_test) 
+
+test_data <- cbind.data.frame(X_test, Y_test)
+
 ```
 
 ```{r}
-set.seed(1)
-data_math <- math_data
-data_math_total_rows <- nrow(data_math) 
-data_math.numtrain <- round(data_math_total_rows*.7) # takes 
+
+svm_math <- svm(train_data$Y_train~., data=train_data,kernel = "radial", cross = 5) 
+
+mathPred = predict(svm_math, newdata=X_test)
+table(mathPred, Y_test)
+CM = table(mathPred, Y_test)
+accuracy = (sum(diag(CM)))/sum(CM) 
+misclass_rate_svm <- 1 - accuracy
+misclass_rate_svm
+
+
+
+#set.seed(1)
+#tune.out = tune(svm_math, Y_test~. , data = test_data , ranges = list(cost = c(0.1, 1, 10, 100, 1000), gamma = c(0.5, 1, 2, 3, 4)))
+#summary(tune.out)
+
+
+
+#########
+#Por data
+########
+
+
+df <- read_csv("https://raw.githubusercontent.com/upadhyan/StudentSuccess/main/data/por_data_cleaned.csv") # por data
+
+drops <- c("X","G1","G2","G3", "Student_Score")
+df <- df[ , !(names(df) %in% drops)]
+
+Y <- df$Student_Class - 1
+X <- df[,names(df) != "Student_Class"]
+dtypes <- sapply(X, class)
+categorical_names <- names(dtypes[dtypes != "integer"])
+numerical_names <- names(dtypes[dtypes == "integer"])
+categorical <- X[categorical_names]
+numerical <- X[numerical_names]
+categorical <- as.data.table(lapply(categorical, as.factor))
+categorical <- one_hot(categorical)
+X = cbind(categorical, numerical)
+
+partition = createDataPartition(
+  Y,
+  times = 1,
+  p = 0.7,
+  list = TRUE,
+  groups = min(5, length(Y))
+)
+X_train = X[partition$Resample1,]
+X_test = X[-partition$Resample1,]
+Y_train = Y[partition$Resample1]
+Y_test = Y[-partition$Resample1]
+
+Y_train = factor(Y_train) 
+
+train_data <- cbind.data.frame(X_train, Y_train)
+
+Y_test = factor(Y_test) 
+
+test_data <- cbind.data.frame(X_test, Y_test)
+
 ```
 
 ```{r}
-data_math.new <- data_math[, -c(31:34)] # delete columns 31 - 34 
-tindex_math <- sample(data_math_total_rows, data_math.numtrain) # Create a random index 
-train_data_math <- data_math.new[tindex_math,] # Create training set 
-test_data_math <- data_math.new[-tindex_math,] # Create test set 
-svm_math <- svm(Student_Class~., data=train_data_math, kernal="radial", gamma=0.1, cost=10) 
-summary(svm_math)
-```
 
-```{r}
-prediction_math <- predict(svm_math, test_data_math) 
-xtab_math <- table(test_data_math$Student_Class, prediction_math) 
-xtab_math
-```
+svm_por <- svm(train_data$Y_train~., data=train_data, cross = 5) 
 
-```{r}
-set.seed(2)
-data_por <- por_data
-data_por_total_rows <- nrow(data_por) 
-data_por.numtrain <- round(data_por_total_rows*.7) 
-```
+porPred = predict(svm_por, newdata=X_test)
+table(porPred, Y_test)
+CM = table(porPred, Y_test)
+accuracy = (sum(diag(CM)))/sum(CM) 
+misclass_rate_svm <- 1 - accuracy
+misclass_rate_svm
 
-```{r}
-data_por.new <- data_por[, -c(31:34)] # delete columns 31 - 34 
-tindex_por <- sample(data_por_total_rows, data_por.numtrain) # Create a random index 
-train_data_por <- data_por.new[tindex_por,] # Create training set 
-test_data_por <- data_por.new[-tindex_por,] # Create test set 
-svm_por <- svm(Student_Class~., data=train_data_por, kernal="radial", gamma=0.1, cost=10) 
-summary(svm_por)
-```
 
-```{r}
-prediction_por <- predict(svm_por, test_data_por) 
-xtab_por <- table(test_data_por$Student_Class, prediction_por) 
-xtab_por
-```
+
+#set.seed(1)
+#tune.out = tune(svm_math, Y_test~. , data = test_data , ranges = list(cost = c(0.1, 1, 10, 100, 1000), gamma = c(0.5, 1, 2, 3, 4)))
+#summary(tune.out)
