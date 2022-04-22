@@ -41,11 +41,6 @@ data_por = cbind(data_por, Student_Score = student_score_por)
 
 Create/Assign Classes
 ```{r}
-#Plot of histograms of both student score vectors
-par(mfrow = c(2,1))
-hist(student_score_math, main = "Student Scores for Math", xlab = "Student Score")
-hist(student_score_por,main = "Student Scores for Portugese", xlab = "Student Score")
-
 #Create classes
 #Function: create_classes
 #Description:
@@ -59,7 +54,7 @@ create_classes = function(student_score){
   
   temp = sort(student_score)
   bound1 = temp[size]
-  bound2 = temp[2 * size]
+  bound2 = temp[2*size]
   return(c(bound1, bound2))
 }
 
@@ -105,6 +100,16 @@ classes_por = assign_class(student_score_por, bounds_por)
 data_math = cbind(data_math, Student_Class = as.factor(classes_math))
 data_por = cbind(data_por, Student_Class = as.factor(classes_por))
 
+#Plot of histograms of both student score vectors
+par(mfrow = c(2,1))
+hist(student_score_math, main = "Student Scores for Math", xlab = "Student Score", col = "goldenrod1")
+abline(v = bounds_math[1])
+abline(v = bounds_math[2])
+
+hist(student_score_por,main = "Student Scores for Portugese", xlab = "Student Score", col = "goldenrod1")
+abline(v = bounds_por[1])
+abline(v = bounds_por[2])
+
 ```
 Data Analysis
 ```{r}
@@ -123,7 +128,7 @@ plt1 = function(index, dat){
   tit = paste0("Bargraph of ", names(dat[index]))
   
   #Creates plot using ggplot
-  x = ggplot(dat, aes(x = factor(dat[,index]))) + geom_bar(fill = 'coral') + ggtitle(tit) + xlab(names(dat[index]))
+  x = ggplot(dat, aes(x = factor(dat[,index]))) + geom_bar(fill = 'goldenrod1') + ggtitle(tit) + xlab(names(dat[index]))
   return(x)
 }
 
@@ -139,22 +144,55 @@ plt2 = function(i, dat){
   }
 }
 
-#uses plt2 function to plot barplots for all factor variables for math and por datasets
+#Make plots for Math
 plt2(1, data_math); plt2(6, data_math); plt2(11, data_math); plt2(16, data_math); plt2(21, data_math); plt2(26, data_math)
 
-plt2(1, data_por); plt2(6, data_por); plt2(11, data_por); plt2(16, data_por); plt2(21, data_por); plt2(26, data_por)
-
-##Plot Boxplots for each of the continuous variables
 par(mfrow = c(1,3))
-boxplot(data_math$G1, xlab = "Grades: Period 1", col = "coral")
-boxplot(data_math$G2, xlab = "Grades: Period 2", col = "coral")
-boxplot(data_math$G3, xlab = "Grades: Period 3", col = "coral")
+boxplot(data_math$G1, xlab = "Grades: Period 1", col = "goldenrod1")
+boxplot(data_math$G2, xlab = "Grades: Period 2", col = "goldenrod1")
+boxplot(data_math$G3, xlab = "Grades: Period 3", col = "goldenrod1")
 title("Boxplots of Period Grades for Math", outer = TRUE, line = -1)
 
+#Make Plots for Portugese
+plt2(1, data_por); plt2(6, data_por); plt2(11, data_por); plt2(16, data_por); plt2(21, data_por); plt2(26, data_por)
+
 par(mfrow = c(1,3))
-boxplot(data_por$G1, xlab = "Grades: Period 1", col = "coral")
-boxplot(data_por$G2, xlab = "Grades: Period 2", col = "coral")
-boxplot(data_por$G3, xlab = "Grades: Period 3", col = "coral")
+boxplot(data_por$G1, xlab = "Grades: Period 1", col = "goldenrod1")
+boxplot(data_por$G2, xlab = "Grades: Period 2", col = "goldenrod1")
+boxplot(data_por$G3, xlab = "Grades: Period 3", col = "goldenrod1")
 title("Boxplots of Period Grades for Portugese", outer = TRUE, line = -1)
+
+#Print Key for variable names
+print("Key for variable names in plots:")
+print("School - student's school (binary: 'GP' - Gabriel Pereira or 'MS' - Mousinho da Silveira)")
+print("Sex - student's sex (binary: 'F' - female or 'M' - male)")
+print("Age - student's age (numeric: from 15 to 22)")
+print("Address - student's home address type (binary: 'U' - urban or 'R' - rural)")
+print("Famsize - family size (binary: 'LE3' - less or equal to 3 or 'GT3' - greater than 3)")
+print("Medu - mother's education (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3  - secondary education or 4 - higher education)")
+print("Fedu - father's education (numeric: 0 - none, 1 - primary education (4th grade), 2 - 5th to 9th grade, 3  - secondary education or 4 - higher education)")
+print("Mjob - mother's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')")
+print("Fjob - father's job (nominal: 'teacher', 'health' care related, civil 'services' (e.g. administrative or police), 'at_home' or 'other')")
+print("Reason - reason to choose this school (nominal: close to 'home', school 'reputation', 'course' preference or 'other')")
+print("Guardian - student's guardian (nominal: 'mother', 'father' or 'other')")
+print("Traveltime - home to school travel time (numeric: 1 - <15 min., 2 - 15 to 30 min., 3 - 30 min. to 1 hour, or 4 - >1 hour)")
+print("Studytime - weekly study time (numeric: 1 - <2 hours, 2 - 2 to 5 hours, 3 - 5 to 10 hours, or 4 - >10 hours)")
+print("Failures - number of past class failures (numeric: n if 1<=n<3, else 4)")
+print("Schoolsup - extra educational support (binary: yes or no)")
+print("Famsup - family educational support (binary: yes or no)")
+print("Paid - extra paid classes within the course subject (Math or Portuguese) (binary: yes or no)")
+print("Activities - extra-curricular activities (binary: yes or no)")
+print("Nursery - attended nursery school (binary: yes or no)")
+print("Higher - wants to take higher education (binary: yes or no)")
+print("Internet - Internet access at home (binary: yes or no)")
+print("Romantic - with a romantic relationship (binary: yes or no)")
+print("Famrel - quality of family relationships (numeric: from 1 - very bad to 5 - excellent)")
+print("Freetime - free time after school (numeric: from 1 - very low to 5 - very high)")
+print("Goout - going out with friends (numeric: from 1 - very low to 5 - very high)")
+print("Dalc - workday alcohol consumption (numeric: from 1 - very low to 5 - very high)")
+print("Walc - weekend alcohol consumption (numeric: from 1 - very low to 5 - very high)")
+print("Health - current health status (numeric: from 1 - very bad to 5 - very good)")
+print("Absences - number of school absences (numeric: from 0 to 93)")
+print("GN - Grade in period N (numeric: from 0 to 20)")
 
 ```
