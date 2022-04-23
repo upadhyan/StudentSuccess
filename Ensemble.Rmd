@@ -60,6 +60,11 @@ Y_test = Y[-partition$Resample1]
 ```
 
 ## Logistic Regression 
+```{r}
+lm_fit <- glm(as.factor(Y_train)~.,data=training_set,family= binomial())
+Y_hat_logistic <- predict(lm_fit,newdata=X_test,type="response")
+
+```
 
 ## XGBoost
 ### Train
@@ -83,23 +88,10 @@ Y_hat_XGBoost <- as.factor(predict(bstDense, as.matrix(X_test)))
 
 ## SVM 
 
-## Ensemble 
 
-## Evaluation
-
-# Portugese Data
-
-## Load Data
-
-## Logistic Regression Prediction
-
-## XGBoost Prediction
-
-## SVM Prediction
 
 ## Ensemble 
 ```{r}
-Y_hat_logistic <- as.factor(sample(0:2, length(Y_hat_XGBoost), replace = TRUE))
 Y_hat_SVM <- as.factor(sample(0:2, length(Y_hat_XGBoost), replace = TRUE))
 predictions <- data.frame(Y_hat_logistic, Y_hat_XGBoost, Y_hat_SVM)
 class_chooser <- function(x){
