@@ -70,19 +70,6 @@ training_set <- cbind(Y_train,X_train)
 
 ## Generalised Linear Model
 
-```{r eval=FALSE, include=FALSE}
-lm_fit <- multinom(Y_train~.,data=training_set,summ = TRUE)
-lm_fit
-plot(lm_fit)
-
-```
-
-```{r eval=FALSE, include=FALSE}
-Y_hat <- predict(lm_fit,newx=as.matrix(X_test),type = 'class' )
-c_matrix <- confusionMatrix(data=as.factor(Y_hat), reference = as.factor(Y_test))
-c_matrix
-```
-
 ## Fit Using Lasso
 
 Finding an optimal lambda to use by using k-fold cross validation.
