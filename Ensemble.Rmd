@@ -63,9 +63,6 @@ Y_test = Y[-partition$Resample1]
 ```{r}
 lm_fit <- glmnet(as.matrix(X_train),as.factor(Y_train),lambda = best_lambda,alpha=1,family = "multinomial")
 Y_hat_logistic <- predict(lasso_bestfit,newx = as.matrix(X_test), s=best_lambda,type = "class")
-
-c_matrix_lasso <- confusionMatrix(data=as.factor(lasso_resp), reference = as.factor(Y_test))
-c_matrix_lasso
 ```
 
 ## XGBoost
