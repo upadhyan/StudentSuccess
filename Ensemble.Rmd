@@ -61,8 +61,8 @@ Y_test = Y[-partition$Resample1]
 
 ## Logistic Regression
 ```{r}
-lm_fit <- glmnet(as.matrix(X_train),as.factor(Y_train),lambda = best_lambda,alpha=1,family = "multinomial")
-Y_hat_logistic <- predict(lasso_bestfit,newx = as.matrix(X_test), s=best_lambda,type = "class")
+lm_fit <- glmnet(as.matrix(X_train),as.factor(Y_train),lambda = 0.0447,alpha=1,family = "multinomial")
+Y_hat_logistic <- predict(lasso_bestfit,newx = as.matrix(X_test), s=0.0447,type = "class")
 ```
 
 ## XGBoost
