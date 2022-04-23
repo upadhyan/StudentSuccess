@@ -59,7 +59,7 @@ Y_test = Y[-partition$Resample1]
 
 ```
 
-## Logistic Regression 
+## Logistic Regression
 ```{r}
 lm_fit <- glmnet(as.matrix(X_train),as.factor(Y_train),lambda = best_lambda,alpha=1,family = "multinomial")
 Y_hat_logistic <- predict(lasso_bestfit,newx = as.matrix(X_test), s=best_lambda,type = "class")
@@ -71,7 +71,7 @@ c_matrix_lasso
 ## XGBoost
 ### Train
 ```{r}
-bstDense <- xgboost(data = as.matrix(X_train), 
+bstDense <- xgboost(data = as.matrix(X_train),
                     label= Y_train,
                     objective = "multi:softmax",
                     num_class = 3,
@@ -88,12 +88,18 @@ bstDense <- xgboost(data = as.matrix(X_train),
 Y_hat_XGBoost <- as.factor(predict(bstDense, as.matrix(X_test)))
 ```
 
-## SVM 
+## SVM
 
-
-
-## Ensemble 
 ```{r}
+
+Y_hat_SVM <- "END PREDICTION ON TESTING SET HERE"
+
+```
+
+
+## Ensemble
+```{r}
+Y_hat_logistic <- as.factor(sample(0:2, length(Y_hat_XGBoost), replace = TRUE))
 Y_hat_SVM <- as.factor(sample(0:2, length(Y_hat_XGBoost), replace = TRUE))
 predictions <- data.frame(Y_hat_logistic, Y_hat_XGBoost, Y_hat_SVM)
 class_chooser <- function(x){
