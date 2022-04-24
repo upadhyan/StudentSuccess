@@ -88,8 +88,14 @@ Y_hat_XGBoost <- as.factor(predict(bstDense, as.matrix(X_test)))
 ## SVM
 
 ```{r}
+Y_train = factor(Y_train) 
+train_data <- cbind.data.frame(X_train, Y_train)
+Y_test = factor(Y_test) 
+test_data <- cbind.data.frame(X_test, Y_test)
 
-Y_hat_SVM <- "END PREDICTION ON TESTING SET HERE"
+svm_data <- svm(train_data$Y_train~., data=train_data,kernel = "radial", cross = 5) 
+Y_hat_SVM  = as.factor(predict(svm_data, newdata=X_test))
+
 
 ```
 
