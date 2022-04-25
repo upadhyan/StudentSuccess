@@ -12,6 +12,9 @@ require(mltools)
 require(data.table)
 require(progress)
 require(modeest)
+require(glmnet)
+require(e1071)
+
 ```
 
 
@@ -62,7 +65,7 @@ Y_test = Y[-partition$Resample1]
 ## Logistic Regression
 ```{r}
 lm_fit <- glmnet(as.matrix(X_train),as.factor(Y_train),lambda = 0.0447,alpha=1,family = "multinomial")
-Y_hat_logistic <- predict(lasso_bestfit,newx = as.matrix(X_test), s=0.0447,type = "class")
+Y_hat_logistic <- predict(lm_fit,newx = as.matrix(X_test), s=0.0447,type = "class")
 ```
 
 ## XGBoost
