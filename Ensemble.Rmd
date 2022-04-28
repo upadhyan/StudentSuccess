@@ -14,7 +14,6 @@ require(progress)
 require(modeest)
 require(glmnet)
 require(e1071)
-
 ```
 
 
@@ -50,7 +49,7 @@ X = cbind(categorical, numerical)
 partition = createDataPartition(
   Y,
   times = 1,
-  p = 0.7,
+  p = 0.5,
   list = TRUE,
   groups = min(5, length(Y))
 )
@@ -104,10 +103,47 @@ Y_hat_SVM  = as.factor(predict(svm_data, newdata=X_test))
 
 
 ## Ensemble
+### Split 
 ```{r}
-Y_hat_logistic <- as.factor(sample(0:2, length(Y_hat_XGBoost), replace = TRUE))
-Y_hat_SVM <- as.factor(sample(0:2, length(Y_hat_XGBoost), replace = TRUE))
-predictions <- data.frame(Y_hat_logistic, Y_hat_XGBoost, Y_hat_SVM)
+predictions <- data.frame(Y_test, Y_hat_logistic, Y_hat_XGBoost, Y_hat_SVM)
+
+Y <-Y_test
+partition = createDataPartition(
+  Y,
+  times = 1,
+  p = 0.5,
+  list = TRUE,
+  groups = min(5, length(Y))
+)
+pred_val = predictions[partition$Resample1,]
+pred_test = predictions[-partition$Resample1,]
+```
+
+### New Logistic Regression Model
+
+```{r}
+require(rattle)
+require(rpart.plot)
+require(rpart)
+ensemble_fit <- rpart(Y_test~., data = pred_val, minsplit = 5)
+prp(ensemble_fit)
+
+```
+
+### Ensembling
+
+```{r}
+X_final_test <- pred_test[ , !(names(pred_test) %in% c("Y_test"))]
+end_predictions <- predict(ensemble_fit, X_final_test)
+end_predictions <- factor(max.col(end_predictions) - 1)
+
+c_matrix <- confusionMatrix(data=end_predictions, reference = as.factor(pred_test$Y_test))
+c_matrix
+
+```
+
+
+```{r}
 class_chooser <- function(x){
   mode <- mlv(x, method = "mfv")
   if (length(mode) > 1) {
@@ -117,13 +153,31 @@ class_chooser <- function(x){
   return(mode)
 }
 
-end_predictions = apply(predictions, 1,class_chooser)
+end_predictions = apply(X_final_test, 1,class_chooser)
 
-c_matrix <- confusionMatrix(data=end_predictions, reference = as.factor(Y_test))
+predictions$truth <- as.factor(Y_test)
+
+c_matrix <- confusionMatrix(data=end_predictions, reference = as.factor(pred_test$Y_test))
 c_matrix
 
 ```
 
-
-
 ## Evaluation
+
+Logistic Regression
+```{r}
+c_matrix <- confusionMatrix(data=factor(pred_test$X1), reference = as.factor(pred_test$Y_test))
+c_matrix
+```
+
+XGBoost
+```{r}
+c_matrix <- confusionMatrix(data=factor(pred_test$Y_hat_XGBoost), reference = as.factor(pred_test$Y_test))
+c_matrix
+```
+
+```{r}
+c_matrix <- confusionMatrix(data=factor(pred_test$Y_hat_SVM), reference = as.factor(pred_test$Y_test))
+c_matrix
+```
+
