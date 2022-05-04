@@ -49,16 +49,15 @@ Create/Assign Classes
 #->student score: vector of score values for student performance
 #outputs:
 #->bounds: vector containing two boundaries of the classes
-
-#create_classes = function(student_score){
-#  bound1 = mean(student_score) - (sd(student_score) / 2)
-#  bound2 = mean(student_score) + (sd(student_score) / 2)
-#  return(c(bound1, bound2))
-#}
+create_classes = function(student_score){
+  bound1 = mean(student_score) - (sd(student_score) / 2)
+  bound2 = mean(student_score) + (sd(student_score) / 2)
+  return(c(bound1, bound2))
+}
 
 #Create boundaries of classes
-bounds_math = round(mean(student_score_math))
-bounds_por = round(mean(student_score_por))
+bounds_math = create_classes(student_score_math)
+bounds_por = create_classes(student_score_por)
 
 #Assign Classes
 
@@ -70,12 +69,18 @@ bounds_por = round(mean(student_score_por))
 #->bounds: vector containing two boundaries of the classes
 #outputs:
 #->student_class: vector of class assignments
-assign_class = function(student_score, bound){
+assign_class = function(student_score, bounds){
   student_class = NULL
   
+  #Loop through scores
   for(i in 1:length(student_score)){
-    if(student_score[i] < bound){
+    
+    #Select apropriate class based on score
+    if(student_score[i] < bounds[1]){
       student_class = c(student_class, 1)
+    }
+    else if(student_score[i] >= bounds[2]){
+      student_class = c(student_class, 3)
     }
     else{
       student_class = c(student_class, 2)
@@ -83,23 +88,7 @@ assign_class = function(student_score, bound){
   }
   
   return(student_class)
-}
-  #Loop through scores
-#  for(i in 1:length(student_score)){
-    
-    #Select apropriate class based on score
-#    if(student_score[i] < bounds[1]){
-#      student_class = c(student_class, 1)
-#    }
-#    else if(student_score[i] >= bounds[2]){
-#      student_class = c(student_class, 3)
-#    }
-#    else{
-#      student_class = c(student_class, 2)
-#    }
-#  }
-  
-#  return(student_class)
+}  
 
 #Create classes and append to data frame
 classes_math = assign_class(student_score_math, bounds_math)
@@ -111,10 +100,12 @@ data_por = cbind(data_por, Student_Class = as.factor(classes_por))
 #Plot of histograms of both student score vectors
 par(mfrow = c(2,1))
 hist(student_score_math, main = "Student Scores for Math", xlab = "Student Score", col = "goldenrod1")
-abline(v = bounds_math)
+abline(v = bounds_math[1])
+abline(v = bounds_math[2])
 
 hist(student_score_por,main = "Student Scores for Portugese", xlab = "Student Score", col = "goldenrod1")
-abline(v = bounds_por)
+abline(v = bounds_por[1])
+abline(v = bounds_por[2])
 
 ```
 Data Analysis
